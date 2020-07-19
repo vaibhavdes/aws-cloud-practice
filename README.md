@@ -3,13 +3,17 @@
 # 1. Lambda Function to Process Image File
 
 a) Install Necessary Packages
+
   npm install
   
 b) Generate Build to Deploy to Lambda
+
   npm build
   
 c) Upload as Zip 
+
     OR
+    
    Upload to S3 Bucket and Provide Object URL in (Function Code - Action Section)
    
 # 2. Add Following Environment Variables for Lambda Function
