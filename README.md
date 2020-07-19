@@ -14,7 +14,9 @@ c) Upload as Zip
    
 # 2. Add Following Environment Variables for Lambda Function
   DEST_BUCKET = S3 Bucket Name to Store Processed Image
+  
   QUEUE_URL = SQS Queue URL to Send the Image & Bucket Information
+  
   QUALITY = Configure Image Quality Between 1 - 100 (Low to High)
   
   
@@ -24,7 +26,9 @@ c) Upload as Zip
 
 # 4. Configure Handler (Function to be called on Event) in Basic Settings
   Handler - src/index.handler
+  
   Timeout - 10 sec
+  
   Runtime - Node.js 12.x
 
 # 5. Configure Asynchronous invocationInfo
