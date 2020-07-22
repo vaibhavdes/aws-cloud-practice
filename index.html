@@ -1,0 +1,227 @@
+<html>
+
+<head>
+<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css" integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk" crossorigin="anonymous">
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js" integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js" integrity="sha384-OgVRvuATP1z7JjHLkuOU7Xw704+h835Lr+6QL9UvYjZE3Ipu6Tp75j7Bh/kR0JKI" crossorigin="anonymous"></script>
+<script type="text/javascript" src="http://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.js"></script>
+<script>
+var base_url = "http://localhost:5000";
+var username = "";
+var password = "";
+var data = [];
+
+window.onload = function() {
+	base_url = sessionStorage.getItem('base_url');
+    document.getElementById("baseurl").value = base_url;
+};
+
+function setup() {
+    var _baseUrlValue = document.getElementById("baseurl").value;
+	sessionStorage.setItem('base_url', _baseUrlValue);
+	base_url = sessionStorage.getItem('base_url');
+	username = document.getElementById("username").value;
+	password = document.getElementById("password").value;
+}
+
+function fileUpload() {
+	console.log("Uploading Started");
+	
+	let myForm = document.getElementById('uploadForm');
+    var file = document.getElementById("fileid");
+	var formData = new FormData(myForm);
+	
+	/*
+	for(var f in file) {
+        formData.append("file", files[f].data);
+    }
+	*/
+	
+	formData.append("file", file.files[0]);
+
+	var xhttp = new XMLHttpRequest();
+	// listen for upload progress
+	xhttp.upload.onprogress = function(event) {
+		progressFunction(event);
+		let percent = Math.round(100 * event.loaded / event.total);
+		console.log(`File is ${percent} uploaded.`);
+	};
+	// handle error
+	xhttp.upload.onerror = function() {
+		console.log(`Error during the upload: ${xhttp.status}.`);
+	};
+	// Response
+	xhttp.onreadystatechange = function() {
+		if (this.readyState == 4 && this.status == 200) {
+			var response = xhttp.responseText;
+			alert("Result : " + response);
+		}
+	};
+	
+	xhttp.open("POST", this.base_url + "/upload", true);
+	xhttp.setRequestHeader("Authorization", "Basic " + btoa(username + ":" + password)); 
+	//xhttp.setRequestHeader("Content-Type", "multipart/form-data"); 
+	xhttp.send(formData);
+
+}
+
+function progressFunction(evt){  
+	 var progressBar = document.getElementById("progressBar");  
+	 var percentageDiv = document.getElementById("percentageCalc");  
+	 if (evt.lengthComputable) {  
+	   progressBar.max = evt.total;  
+	   progressBar.value = evt.loaded;  
+	   //percentageDiv.innerHTML = Math.round(evt.loaded / evt.total * 100) + "%";  
+	 }  
+}  
+ 
+function loadImageData() {
+	console.log("Fetching Image Data");
+	$("#table-body").children().remove();
+	
+	var xhttp = new XMLHttpRequest();
+	xhttp.open( "GET", base_url + "/images", false ); // false for synchronous request
+	xhttp.setRequestHeader("Access-Control-Allow-Headers", "Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With"); 
+	xhttp.setRequestHeader("Access-Control-Allow-Origin", "*"); 
+	xhttp.setRequestHeader("Authorization", "Basic " + btoa(username + ":" + password)); 
+	xhttp.send( null );
+    console.log("RES " + xhttp.responseText);
+	data = JSON.parse(xhttp.responseText);
+	console.log(data.status);
+
+	var count = 0;
+	for (var i in data){
+	  count = count + 1;
+	  var row = `
+				<tr>
+				<td>${count}</td>
+				<td>${data[i].userId}</td>
+				<td>${data[i].sourceBucket}</td>
+				<td>${data[i].objectKey}</td>
+				<td>${data[i].destinationBucket}</td>
+				<td>${data[i].thumbKey}</td>
+				<td>${data[i].createdTimeStamp}</td>
+				<td>
+					<button onclick="loadImage(this)">
+					<svg width="3em" height="3em" viewBox="0 0 16 16" class="bi bi-cloud-arrow-down-fill" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+					  <path fill-rule="evenodd" d="M8 2a5.53 5.53 0 0 0-3.594 1.342c-.766.66-1.321 1.52-1.464 2.383C1.266 6.095 0 7.555 0 9.318 0 11.366 1.708 13 3.781 13h8.906C14.502 13 16 11.57 16 9.773c0-1.636-1.242-2.969-2.834-3.194C12.923 3.999 10.69 2 8 2zm2.354 6.854l-2 2a.5.5 0 0 1-.708 0l-2-2a.5.5 0 1 1 .708-.708L7.5 9.293V5.5a.5.5 0 0 1 1 0v3.793l1.146-1.147a.5.5 0 0 1 .708.708z"/>
+					</svg>
+					</button>
+				</td>
+				</tr>
+				`
+	  var table = $('#table-body')
+	  table.append(row)
+	}
+
+}
+
+function loadImage(i) {
+	var index = i.parentNode.parentNode.rowIndex-1;
+	console.log(i.parentNode.parentNode.rowIndex);
+	console.log(data[index].sourceBucket);
+	var _original = document.getElementById('original');
+	var _processed = document.getElementById('processed');
+
+	_original.src = base_url + "/download?file=" + data[index].objectKey + "&bucket=" + data[index].sourceBucket;
+	_processed.src = base_url + "/download?file=" + data[index].thumbKey + "&bucket=" + data[index].destinationBucket;
+}
+
+</script>
+</head>
+
+<body>
+<div class="container">
+
+<nav>
+  <div class="nav nav-tabs" id="nav-tab" role="tablist">
+    <a class="nav-item nav-link active" id="nav-home-tab" data-toggle="tab" href="#nav-home" role="tab" aria-controls="nav-home" aria-selected="true">Setup</a>
+    <a class="nav-item nav-link" id="nav-profile-tab" data-toggle="tab" href="#nav-profile" role="tab" aria-controls="nav-profile" aria-selected="false">Test</a>
+    <a class="nav-item nav-link" id="nav-contact-tab" data-toggle="tab" href="#nav-contact" role="tab" aria-controls="nav-contact" aria-selected="false">Preview</a>
+  </div>
+</nav>
+
+<div class="tab-content" id="nav-tabContent">
+  <div class="tab-pane fade active" id="nav-home" role="tabpanel" aria-labelledby="nav-home-tab">
+  
+		<h5>Base URL / Authentication </h5>
+		<input type="text" id="baseurl" name="baseurl" placeholder="Enter Server Base URL">	
+		<input type="text" id="username" name="username" placeholder="Enter Username">			
+		<input type="text" id="password" name="password" placeholder="Enter Password">			
+		<input type="button" name="save" value="Save" onclick="setup()">	
+
+  </div>
+  <!-- Bahut Hua Abb -->
+  <div class="tab-pane fade" id="nav-profile" role="tabpanel" aria-labelledby="nav-profile-tab">
+  
+  		<div class="row" style="margin-top:50px;align-items-center">
+			<div class="col align-self-start ">
+				<h5>File Upload to S3</h5>
+				<progress id="progressBar" value="0" max="100">  </progress>  
+			</div>
+			<div class="col align-self-center">
+
+				<form  action="#" method="post" id="uploadForm" name="uploadForm" >
+					<input type="file" id="fileid" name="file" required>
+					<input type="button" name="submit" value="Upload" onclick="fileUpload()">
+				</form>		
+			</div>
+		</div>
+		
+		<div class="row" style="margin-top:30px">
+		
+			<h5>Files Meta Information
+				<svg onclick="loadImageData()" width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-clockwise" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+				  <path fill-rule="evenodd" d="M3.17 6.706a5 5 0 0 1 7.103-3.16.5.5 0 1 0 .454-.892A6 6 0 1 0 13.455 5.5a.5.5 0 0 0-.91.417 5 5 0 1 1-9.375.789z"/>
+				  <path fill-rule="evenodd" d="M8.147.146a.5.5 0 0 1 .707 0l2.5 2.5a.5.5 0 0 1 0 .708l-2.5 2.5a.5.5 0 1 1-.707-.708L10.293 3 8.147.854a.5.5 0 0 1 0-.708z"/>
+				</svg>
+			</h5>
+			
+			<table border="1" id="imagetable" class="table">
+				<thead>
+					<tr>
+						<th>Sr.No</th>
+						<th>Request ID</th>
+						<th>Source Bucket</th>
+						<th>Original Key</th>
+						<th>Processed Bucket</th>
+						<th>Processed Key Key</th>
+						<th>Date / Time</th>
+						<th>
+						
+						</th>
+					</tr>		
+				</thead>
+				<tbody id="table-body">
+				</tbody>
+			</table>
+
+		</div>
+
+  </div>
+  <!-- Bahut Hua Abb -->
+  <div class="tab-pane fade" id="nav-contact" role="tabpanel" aria-labelledby="nav-contact-tab">
+  
+			<div class="row" style="margin-top:50px">
+				<div class="col align-self-center">
+					<h5>Image Section</h5>
+				</div>
+				<div class="col align-self-center">
+					<h4>Original</h4>
+					<img id="original" name="original"  class="img-thumbnail">
+				</div>
+				<div class="col align-self-center">
+					<h4>Processed</h4>
+					<img id="processed" name="processed"  class="img-thumbnail">
+				</div>
+			</div>
+			
+  <!-- Bahut Hua Abb -->
+  </div>
+</div>
+
+
+</div>
+</body>
+</html>
