@@ -7,7 +7,7 @@
 <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js" integrity="sha384-OgVRvuATP1z7JjHLkuOU7Xw704+h835Lr+6QL9UvYjZE3Ipu6Tp75j7Bh/kR0JKI" crossorigin="anonymous"></script>
 <script type="text/javascript" src="http://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.js"></script>
 <script>
-var base_url = "http://localhost:5000";
+var base_url = "";
 var username = "";
 var password = "";
 var data = [];
@@ -23,10 +23,18 @@ function setup() {
 	base_url = sessionStorage.getItem('base_url');
 	username = document.getElementById("username").value;
 	password = document.getElementById("password").value;
+	alert("SAVED");
 }
 
 function fileUpload() {
+	if (base_url.length == 0) {
+		alert("Base URL is NULL");
+		return "";
+	}
+	
 	console.log("Uploading Started");
+	var progressBar = document.getElementById("progressBar");  
+	progressBar.value = 0;  
 	
 	let myForm = document.getElementById('uploadForm');
     var file = document.getElementById("fileid");
@@ -50,12 +58,18 @@ function fileUpload() {
 	// handle error
 	xhttp.upload.onerror = function() {
 		console.log(`Error during the upload: ${xhttp.status}.`);
+		progressBar.value = 0;  
+		alert("Error :" + xhttp.status);
 	};
 	// Response
 	xhttp.onreadystatechange = function() {
 		if (this.readyState == 4 && this.status == 200) {
 			var response = xhttp.responseText;
-			alert("Result : " + response);
+			alert("FileUploaded : " + response);
+		}
+		if(this.readyState == 4 && this.status == 401) {
+			progressBar.value = 0;  
+			alert("Error :" + xhttp.status);
 		}
 	};
 	
@@ -68,6 +82,8 @@ function fileUpload() {
 
 function progressFunction(evt){  
 	 var progressBar = document.getElementById("progressBar");  
+	 progressBar.value = 0;  
+
 	 var percentageDiv = document.getElementById("percentageCalc");  
 	 if (evt.lengthComputable) {  
 	   progressBar.max = evt.total;  
@@ -77,6 +93,11 @@ function progressFunction(evt){
 }  
  
 function loadImageData() {
+	if (base_url.length == 0) {
+		alert("Base URL is NULL");
+		return "";
+	}
+	
 	console.log("Fetching Image Data");
 	$("#table-body").children().remove();
 	
@@ -90,34 +111,45 @@ function loadImageData() {
 	data = JSON.parse(xhttp.responseText);
 	console.log(data.status);
 
-	var count = 0;
-	for (var i in data){
-	  count = count + 1;
-	  var row = `
-				<tr>
-				<td>${count}</td>
-				<td>${data[i].userId}</td>
-				<td>${data[i].sourceBucket}</td>
-				<td>${data[i].objectKey}</td>
-				<td>${data[i].destinationBucket}</td>
-				<td>${data[i].thumbKey}</td>
-				<td>${data[i].createdTimeStamp}</td>
-				<td>
-					<button onclick="loadImage(this)">
-					<svg width="3em" height="3em" viewBox="0 0 16 16" class="bi bi-cloud-arrow-down-fill" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-					  <path fill-rule="evenodd" d="M8 2a5.53 5.53 0 0 0-3.594 1.342c-.766.66-1.321 1.52-1.464 2.383C1.266 6.095 0 7.555 0 9.318 0 11.366 1.708 13 3.781 13h8.906C14.502 13 16 11.57 16 9.773c0-1.636-1.242-2.969-2.834-3.194C12.923 3.999 10.69 2 8 2zm2.354 6.854l-2 2a.5.5 0 0 1-.708 0l-2-2a.5.5 0 1 1 .708-.708L7.5 9.293V5.5a.5.5 0 0 1 1 0v3.793l1.146-1.147a.5.5 0 0 1 .708.708z"/>
-					</svg>
-					</button>
-				</td>
-				</tr>
-				`
-	  var table = $('#table-body')
-	  table.append(row)
+	if(data.status != 401) {
+		var count = 0;
+		for (var i in data){
+		  count = count + 1;
+		  var row = `
+					<tr>
+					<td>${count}</td>
+					<td>${data[i].userId}</td>
+					<td>${data[i].sourceBucket}</td>
+					<td>${data[i].objectKey}</td>
+					<td>${data[i].destinationBucket}</td>
+					<td>${data[i].thumbKey}</td>
+					<td>${data[i].createdTimeStamp}</td>
+					<td>
+						<button onclick="loadImage(this)">
+						<svg width="3em" height="3em" viewBox="0 0 16 16" class="bi bi-cloud-arrow-down-fill" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+						  <path fill-rule="evenodd" d="M8 2a5.53 5.53 0 0 0-3.594 1.342c-.766.66-1.321 1.52-1.464 2.383C1.266 6.095 0 7.555 0 9.318 0 11.366 1.708 13 3.781 13h8.906C14.502 13 16 11.57 16 9.773c0-1.636-1.242-2.969-2.834-3.194C12.923 3.999 10.69 2 8 2zm2.354 6.854l-2 2a.5.5 0 0 1-.708 0l-2-2a.5.5 0 1 1 .708-.708L7.5 9.293V5.5a.5.5 0 0 1 1 0v3.793l1.146-1.147a.5.5 0 0 1 .708.708z"/>
+						</svg>
+						</button>
+					</td>
+					</tr>
+					`
+		  var table = $('#table-body')
+		  table.append(row)
+		}
+	} else {
+		alert("Error : " + data.status );
 	}
 
 }
 
 function loadImage(i) {
+	if (base_url.length == 0) {
+		alert("Base URL is NULL");
+		return "";
+	}
+	
+	alert("Loading Image : ");
+
 	var index = i.parentNode.parentNode.rowIndex-1;
 	console.log(i.parentNode.parentNode.rowIndex);
 	console.log(data[index].sourceBucket);
@@ -145,12 +177,12 @@ function loadImage(i) {
 <div class="tab-content" id="nav-tabContent">
   <div class="tab-pane fade active" id="nav-home" role="tabpanel" aria-labelledby="nav-home-tab">
   
-		<h5>Base URL / Authentication </h5>
+		<h5>Base URL / Authentication : http://localhost:8080</h5>
 		<input type="text" id="baseurl" name="baseurl" placeholder="Enter Server Base URL">	
 		<input type="text" id="username" name="username" placeholder="Enter Username">			
 		<input type="text" id="password" name="password" placeholder="Enter Password">			
 		<input type="button" name="save" value="Save" onclick="setup()">	
-
+		
   </div>
   <!-- Bahut Hua Abb -->
   <div class="tab-pane fade" id="nav-profile" role="tabpanel" aria-labelledby="nav-profile-tab">
