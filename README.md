@@ -2,6 +2,8 @@
 
 http://vaibhavdes.github.io/aws-cloud-practice
 
+https://www.mindmeister.com/1574148882/aws-poc
+
 # Lambda Function Invocation
   Attach Trigger as S3 Bucket where Original Image will be uploaded
   
