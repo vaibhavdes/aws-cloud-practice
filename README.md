@@ -1,5 +1,7 @@
 # aws-cloud-practice
 
+Project 1: Image Processing Application
+
 http://vaibhavdes.github.io/aws-cloud-practice
 
 https://www.mindmeister.com/1574148882/aws-poc
